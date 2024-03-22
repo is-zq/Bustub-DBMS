@@ -109,6 +109,8 @@ class Trie {
   // Create a new trie with the given root.
   explicit Trie(std::shared_ptr<const TrieNode> root) : root_(std::move(root)) {}
 
+  auto RemoveHelper(std::string_view key, size_t ind , std::shared_ptr<TrieNode> node) const -> bool;
+
  public:
   // Create an empty trie.
   Trie() = default;
