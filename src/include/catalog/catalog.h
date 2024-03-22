@@ -353,9 +353,10 @@ class Catalog {
   }
 
   auto GetTableNames() -> std::vector<std::string> {
-    std::vector<std::string> result;
+    std::vector<std::string> result(table_names_.size());
+    size_t ind = 0;
     for (const auto &x : table_names_) {
-      result.push_back(x.first);
+      result[ind++] = x.first;
     }
     return result;
   }

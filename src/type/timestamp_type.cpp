@@ -128,7 +128,9 @@ auto TimestampType::ToString(const Value &val) const -> std::string {
     tz = -tz;
   }
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-truncation"""
+#pragma GCC diagnostic ignored \
+    "-Wformat-truncation"      \
+    ""
   snprintf(zone, zone_len, "%02d", tz);  // NOLINT
 #pragma GCC diagnostic pop
   str[27] = 0;
