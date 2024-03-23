@@ -110,11 +110,7 @@ auto Trie::RemoveHelper(std::string_view key, size_t ind, const std::shared_ptr<
     }
   }
 
-  if (!node->is_value_node_ && node->children_.empty()) {
-    return true;
-  }
-
-  return false;
+  return !node->is_value_node_ && node->children_.empty();
 }
 
 auto Trie::Remove(std::string_view key) const -> Trie {
