@@ -30,10 +30,19 @@ class LRUKNode {
   /** History of last seen K timestamps of this page. Least recent timestamp stored in front. */
   // Remove maybe_unused if you start using them. Feel free to change the member variables as you want.
 
-  [[maybe_unused]] std::list<size_t> history_;
-  [[maybe_unused]] size_t k_;
-  [[maybe_unused]] frame_id_t fid_;
-  [[maybe_unused]] bool is_evictable_{false};
+  std::list<size_t> history_;
+  size_t k_;
+  bool is_evictable_{false};
+
+ public:
+  static constexpr size_t INF = std::numeric_limits<size_t>::max();
+
+  LRUKNode(size_t k, frame_id_t fid);
+  void PushHistory(size_t cur_timestamp);
+  auto GetKDistance(size_t cur_timestamp) -> size_t;
+  auto GetRU() -> size_t;
+  void SetEvictable(bool set_evictable);
+  auto IsEvictable() -> bool;
 };
 
 /**
@@ -98,7 +107,7 @@ class LRUKReplacer {
    * @param access_type type of access that was received. This parameter is only needed for
    * leaderboard tests.
    */
-  void RecordAccess(frame_id_t frame_id, AccessType access_type = AccessType::Unknown);
+  void RecordAccess(frame_id_t frame_id);
 
   /**
    * TODO(P1): Add implementation
@@ -150,12 +159,12 @@ class LRUKReplacer {
  private:
   // TODO(student): implement me! You can replace these member variables as you like.
   // Remove maybe_unused if you start using them.
-  [[maybe_unused]] std::unordered_map<frame_id_t, LRUKNode> node_store_;
-  [[maybe_unused]] size_t current_timestamp_{0};
-  [[maybe_unused]] size_t curr_size_{0};
-  [[maybe_unused]] size_t replacer_size_;
-  [[maybe_unused]] size_t k_;
-  [[maybe_unused]] std::mutex latch_;
+  std::unordered_map<frame_id_t, LRUKNode> node_store_;
+  size_t current_timestamp_{0};
+  size_t curr_size_{0};
+  size_t replacer_size_;
+  size_t k_;
+  std::mutex latch_;
 };
 
 }  // namespace bustub
