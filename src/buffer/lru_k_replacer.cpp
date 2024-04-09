@@ -27,7 +27,7 @@ auto LRUKNode::GetKDistance(size_t cur_timestamp) -> size_t {
   }
   return cur_timestamp - history_.front();
 }
-auto LRUKNode::GetRU() -> size_t { return history_.back(); }
+auto LRUKNode::GetLRU() -> size_t { return history_.front(); }
 void LRUKNode::SetEvictable(bool set_evictable) { is_evictable_ = set_evictable; }
 auto LRUKNode::IsEvictable() -> bool { return is_evictable_; }
 
@@ -42,7 +42,7 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
   frame_id_t to_evict_id = -1;
   size_t max_dis = 0;
   size_t k_dis;
-  size_t lru;
+  size_t llru;
   for (auto &[fid, node] : node_store_) {
     if (!node.IsEvictable()) {
       continue;
@@ -52,13 +52,13 @@ auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
       max_dis = k_dis;
       to_evict_id = fid;
       if (k_dis == LRUKNode::INF) {
-        lru = node.GetRU();
+        llru = node.GetLRU();
       }
     } else if (max_dis == LRUKNode::INF && k_dis == max_dis) {
-      size_t ru = node.GetRU();
-      if (ru < lru) {
+      size_t lru = node.GetLRU();
+      if (lru < llru) {
         to_evict_id = fid;
-        lru = ru;
+        llru = lru;
       }
     }
   }

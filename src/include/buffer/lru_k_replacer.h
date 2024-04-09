@@ -40,7 +40,7 @@ class LRUKNode {
   LRUKNode(size_t k, frame_id_t fid);
   void PushHistory(size_t cur_timestamp);
   auto GetKDistance(size_t cur_timestamp) -> size_t;
-  auto GetRU() -> size_t;
+  auto GetLRU() -> size_t;
   void SetEvictable(bool set_evictable);
   auto IsEvictable() -> bool;
 };
