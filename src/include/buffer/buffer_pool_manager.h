@@ -181,7 +181,7 @@ class BufferPoolManager {
   /** Array of buffer pool pages. */
   Page *pages_;
   /** Pointer to the disk sheduler. */
-  std::unique_ptr<DiskScheduler> disk_scheduler_ __attribute__((__unused__));
+  std::unique_ptr<DiskScheduler> disk_scheduler_;
   /** Pointer to the log manager. Please ignore this for P1. */
   LogManager *log_manager_ __attribute__((__unused__));
   /** Page table for keeping track of buffer pool pages. */
@@ -190,8 +190,8 @@ class BufferPoolManager {
   std::unique_ptr<LRUKReplacer> replacer_;
   /** List of free frames that don't have any pages on them. */
   std::list<frame_id_t> free_list_;
-  /** This latch protects shared data structures. We recommend updating this comment to describe what it protects. */
-  std::mutex latch_;
+  /** Protect page_table_ **/
+  std::recursive_mutex latch_;
 
   /**
    * @brief Allocate a page on disk. Caller should acquire the latch before calling this function.
