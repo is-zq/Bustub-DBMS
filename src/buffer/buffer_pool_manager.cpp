@@ -68,7 +68,6 @@ auto BufferPoolManager::FetchPage(page_id_t page_id, [[maybe_unused]] AccessType
   if (page_table_.find(page_id) != page_table_.end()) {
     frame_id = page_table_[page_id];
     pages_[frame_id].pin_count_++;
-    pages_[frame_id].is_dirty_ = true;
 
     replacer_->SetEvictable(frame_id, false);
     replacer_->RecordAccess(frame_id);
@@ -120,7 +119,7 @@ auto BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty, [[maybe_unus
   if (pages_[frame_id].pin_count_ == 0) {
     replacer_->SetEvictable(frame_id, true);
   }
-  pages_[frame_id].is_dirty_ = is_dirty;
+  pages_[frame_id].is_dirty_ = pages_[frame_id].is_dirty_ || is_dirty;  // 原本是true不能置为false
 
   return true;
 }
@@ -135,10 +134,13 @@ auto BufferPoolManager::FlushPage(page_id_t page_id) -> bool {
   std::promise<bool> callback;
   std::future<bool> f = callback.get_future();
 
+  pages_[frame_id].RLatch();
   disk_scheduler_->Schedule({true, pages_[frame_id].data_, pages_[frame_id].page_id_, std::move(callback)});
   if (!f.get()) {
+    pages_[frame_id].RUnlatch();
     return false;
   }
+  pages_[frame_id].RUnlatch();
   pages_[frame_id].is_dirty_ = false;
 
   return true;
@@ -154,10 +156,11 @@ void BufferPoolManager::FlushAllPages() {
 auto BufferPoolManager::DeletePage(page_id_t page_id) -> bool {
   std::lock_guard<std::recursive_mutex> lock(latch_);
   if (page_table_.find(page_id) == page_table_.end()) {
+    DeallocatePage(page_id);
     return true;
   }
-  frame_id_t frame_id = page_table_[page_id];
 
+  frame_id_t frame_id = page_table_[page_id];
   if (pages_[frame_id].pin_count_ != 0) {
     return false;
   }
@@ -165,9 +168,7 @@ auto BufferPoolManager::DeletePage(page_id_t page_id) -> bool {
     FlushPage(pages_[frame_id].page_id_);
   }
   page_table_.erase(page_id);
-
   replacer_->Remove(frame_id);
-
   free_list_.emplace_back(frame_id);
 
   pages_[frame_id].ResetMemory();
@@ -183,9 +184,17 @@ auto BufferPoolManager::AllocatePage() -> page_id_t { return next_page_id_++; }
 
 auto BufferPoolManager::FetchPageBasic(page_id_t page_id) -> BasicPageGuard { return {this, FetchPage(page_id)}; }
 
-auto BufferPoolManager::FetchPageRead(page_id_t page_id) -> ReadPageGuard { return {this, FetchPage(page_id)}; }
+auto BufferPoolManager::FetchPageRead(page_id_t page_id) -> ReadPageGuard {
+  Page *page = FetchPage(page_id);
+  page->RLatch();
+  return {this, page};
+}
 
-auto BufferPoolManager::FetchPageWrite(page_id_t page_id) -> WritePageGuard { return {this, FetchPage(page_id)}; }
+auto BufferPoolManager::FetchPageWrite(page_id_t page_id) -> WritePageGuard {
+  Page *page = FetchPage(page_id);
+  page->WLatch();
+  return {this, page};
+}
 
 auto BufferPoolManager::NewPageGuarded(page_id_t *page_id) -> BasicPageGuard { return {this, NewPage(page_id)}; }
 

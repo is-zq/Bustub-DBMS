@@ -39,6 +39,16 @@ auto ExtendibleHTableDirectoryPage::GetBucketPageId(uint32_t bucket_idx) const -
 }
 
 void ExtendibleHTableDirectoryPage::SetBucketPageId(uint32_t bucket_idx, page_id_t bucket_page_id) {
+  auto size = 1 << global_depth_;
+  for (auto i = 0; i < size; i++) {
+    if (bucket_page_ids_[i] == bucket_page_id) {
+      local_depths_[bucket_idx] = local_depths_[i];
+      break;
+    }
+    if (i == size - 1) {
+      local_depths_[bucket_idx] = global_depth_;
+    }
+  }
   bucket_page_ids_[bucket_idx] = bucket_page_id;
 }
 
@@ -58,10 +68,10 @@ auto ExtendibleHTableDirectoryPage::GetMaxDepth() const -> uint32_t { return max
 
 void ExtendibleHTableDirectoryPage::IncrGlobalDepth() {
   uint32_t o_len = 1 << global_depth_;
-  for(uint32_t idx=0;idx<o_len;idx++)
-  {
-    bucket_page_ids_[GetSplitImageIndex(idx)] = bucket_page_ids_[idx];
-    local_depths_[GetSplitImageIndex(idx)] = local_depths_[idx];
+  for (uint32_t idx = 0; idx < o_len; idx++) {
+    uint32_t split_idx = GetSplitImageIndex(idx);
+    bucket_page_ids_[split_idx] = bucket_page_ids_[idx];
+    local_depths_[split_idx] = local_depths_[idx];
   }
   global_depth_++;
 }
