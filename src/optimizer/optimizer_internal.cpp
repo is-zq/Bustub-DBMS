@@ -1,5 +1,3 @@
-namespace bustub {
+#include "optimizer/optimizer_internal.h"
 
-void OptimizerHelperFunction() {}
-
-}  // namespace bustub
+namespace bustub {}  // namespace bustub

@@ -47,8 +47,18 @@ class SeqScanExecutor : public AbstractExecutor {
   /** @return The output schema for the sequential scan */
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }
 
+  /**
+   * 比较是否满足谓词
+   * @return 如果满足返回true，否则返回false
+   */
+  auto PredCmp(const Tuple &tuple) -> bool {
+    return plan_->filter_predicate_->Evaluate(&tuple, table_info_->schema_).GetAs<bool>();
+  }
+
  private:
   /** The sequential scan plan node to be executed */
   const SeqScanPlanNode *plan_;
+  const TableInfo *table_info_;
+  TableIterator table_it_;
 };
 }  // namespace bustub
