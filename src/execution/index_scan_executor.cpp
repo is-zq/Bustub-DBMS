@@ -18,6 +18,7 @@ IndexScanExecutor::IndexScanExecutor(ExecutorContext *exec_ctx, const IndexScanP
 void IndexScanExecutor::Init() {
   table_info_ = exec_ctx_->GetCatalog()->GetTable(plan_->table_oid_);
   index_info_ = exec_ctx_->GetCatalog()->GetIndex(plan_->index_oid_);
+  retrieved_ = false;
 }
 
 auto IndexScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
