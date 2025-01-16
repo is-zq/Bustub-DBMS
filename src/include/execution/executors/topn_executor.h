@@ -12,7 +12,9 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
+#include <queue>
 #include <utility>
 #include <vector>
 
@@ -23,6 +25,47 @@
 #include "storage/table/tuple.h"
 
 namespace bustub {
+
+/** TopNKey represents a key in an order by operation */
+struct TopNElem {
+  std::vector<std::pair<OrderByType, Value>> keys_;
+  Tuple tuple_;
+
+  TopNElem() = default;
+  TopNElem(std::vector<std::pair<OrderByType, Value>> &&keys, Tuple &&tuple)
+      : keys_(std::move(keys)), tuple_(std::move(tuple)) {}
+
+  auto operator<(const TopNElem &other) const -> bool {
+    for (size_t i = 0; i < keys_.size(); i++) {
+      const OrderByType &order_by_type = keys_[i].first;
+      const Value &value = keys_[i].second;
+      const Value &o_value = other.keys_[i].second;
+      if (value.CompareEquals(o_value) == CmpBool::CmpTrue) {
+        continue;
+      }
+      if ((order_by_type == OrderByType::DEFAULT || order_by_type == OrderByType::ASC)) {
+        return value.CompareLessThan(o_value) == CmpBool::CmpTrue;
+      }
+      return value.CompareGreaterThan(o_value) == CmpBool::CmpTrue;
+    }
+    return false;
+  }
+  auto operator>(const TopNElem &other) const -> bool {
+    for (size_t i = 0; i < keys_.size(); i++) {
+      const OrderByType &order_by_type = keys_[i].first;
+      const Value &value = keys_[i].second;
+      const Value &o_value = other.keys_[i].second;
+      if (value.CompareEquals(o_value) == CmpBool::CmpTrue) {
+        continue;
+      }
+      if ((order_by_type == OrderByType::DEFAULT || order_by_type == OrderByType::ASC)) {
+        return value.CompareGreaterThan(o_value) == CmpBool::CmpTrue;
+      }
+      return value.CompareLessThan(o_value) == CmpBool::CmpTrue;
+    }
+    return false;
+  }
+};
 
 /**
  * The TopNExecutor executor executes a topn.
@@ -63,5 +106,7 @@ class TopNExecutor : public AbstractExecutor {
   const TopNPlanNode *plan_;
   /** The child executor from which tuples are obtained */
   std::unique_ptr<AbstractExecutor> child_executor_;
+
+  std::priority_queue<TopNElem, std::vector<TopNElem>, std::greater<>> min_heap_;
 };
 }  // namespace bustub

@@ -72,15 +72,15 @@ class Optimizer {
    * @param left_column_cnt number of columns in the left size of the NLJ
    * @param right_column_cnt number of columns in the left size of the NLJ
    */
-  auto RewriteExpressionForJoin(const AbstractExpressionRef &expr, size_t left_column_cnt,
-                                size_t right_column_cnt) -> AbstractExpressionRef;
+  auto RewriteExpressionForJoin(const AbstractExpressionRef &expr, size_t left_column_cnt, size_t right_column_cnt)
+      -> AbstractExpressionRef;
 
   /** @brief check if the predicate is true::boolean */
   auto IsPredicateTrue(const AbstractExpressionRef &expr) -> bool;
 
   /** @brief check if the predicate is a conjunction of equi-condition */
   auto IsMultiEqui(const AbstractExpressionRef &expr, std::vector<AbstractExpressionRef> &left_key_expressions,
-                  std::vector<AbstractExpressionRef> &right_key_expressions) -> bool;
+                   std::vector<AbstractExpressionRef> &right_key_expressions) -> bool;
 
   /**
    * @brief optimize order by as index scan if there's an index on a table
@@ -94,8 +94,8 @@ class Optimizer {
   auto OptimizeSeqScanAsIndexScan(const AbstractPlanNodeRef &plan) -> AbstractPlanNodeRef;
 
   /** @brief check if the index can be matched */
-  auto MatchIndex(const std::string &table_name,
-                  uint32_t index_key_idx) -> std::optional<std::tuple<index_oid_t, std::string>>;
+  auto MatchIndex(const std::string &table_name, uint32_t index_key_idx)
+      -> std::optional<std::tuple<index_oid_t, std::string>>;
 
   /**
    * @brief optimize sort + limit as top N

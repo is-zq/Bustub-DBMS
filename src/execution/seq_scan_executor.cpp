@@ -23,13 +23,10 @@ SeqScanExecutor::SeqScanExecutor(ExecutorContext *exec_ctx, const SeqScanPlanNod
   }
 }
 
-void SeqScanExecutor::Init(){
-  rid_it_ = rids_.begin();
-}
+void SeqScanExecutor::Init() { rid_it_ = rids_.begin(); }
 
 auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
-  while (rid_it_ != rids_.end())
-  {
+  while (rid_it_ != rids_.end()) {
     RID next_rid = *rid_it_;
     auto [next_tuple_meta, next_tuple] = table_info_->table_->GetTuple(next_rid);
     ++rid_it_;

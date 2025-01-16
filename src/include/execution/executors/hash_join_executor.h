@@ -13,13 +13,15 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
+#include "common/util/hash_util.h"
 #include "execution/executor_context.h"
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/hash_join_plan.h"
 #include "storage/table/tuple.h"
-#include "common/util/hash_util.h"
 
 namespace bustub {
 
@@ -41,7 +43,7 @@ struct HashJoinKey {
   }
 };
 
-} // namespace bustub
+}  // namespace bustub
 
 namespace std {
 
@@ -95,6 +97,7 @@ class HashJoinExecutor : public AbstractExecutor {
   /** @return The left tuple as an HashJoinKey */
   auto MakeLeftHashJoinKey(const Tuple *tuple) -> HashJoinKey {
     std::vector<Value> keys;
+    keys.reserve(plan_->left_key_expressions_.size());
     for (const auto &expr : plan_->left_key_expressions_) {
       keys.emplace_back(expr->Evaluate(tuple, left_child_->GetOutputSchema()));
     }
@@ -103,6 +106,7 @@ class HashJoinExecutor : public AbstractExecutor {
   /** @return The right tuple as an HashJoinKey */
   auto MakeRightHashJoinKey(const Tuple *tuple) -> HashJoinKey {
     std::vector<Value> keys;
+    keys.reserve(plan_->right_key_expressions_.size());
     for (const auto &expr : plan_->right_key_expressions_) {
       keys.emplace_back(expr->Evaluate(tuple, right_child_->GetOutputSchema()));
     }
@@ -113,9 +117,9 @@ class HashJoinExecutor : public AbstractExecutor {
   std::unique_ptr<AbstractExecutor> left_child_;
   std::unique_ptr<AbstractExecutor> right_child_;
   /** 用multimap解决哈希冲突的情况 */
-  std::unordered_multimap<HashJoinKey,Tuple> ht_;
-  std::unordered_multimap<HashJoinKey,Tuple>::iterator it_;
-  std::unordered_multimap<HashJoinKey,Tuple>::iterator end_it_;
+  std::unordered_multimap<HashJoinKey, Tuple> ht_;
+  std::unordered_multimap<HashJoinKey, Tuple>::iterator it_;
+  std::unordered_multimap<HashJoinKey, Tuple>::iterator end_it_;
   std::vector<Value> cur_left_values_;
 };
 

@@ -23,7 +23,7 @@ InsertExecutor::InsertExecutor(ExecutorContext *exec_ctx, const InsertPlanNode *
 void InsertExecutor::Init() {
   child_executor_->Init();
   inserted_ = false;
-  }
+}
 
 auto InsertExecutor::Next(Tuple *tuple, [[maybe_unused]] RID *rid) -> bool {
   if (inserted_) {

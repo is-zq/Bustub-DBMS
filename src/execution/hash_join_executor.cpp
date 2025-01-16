@@ -37,23 +37,20 @@ void HashJoinExecutor::Init() {
   cur_left_values_.clear();
   Tuple right_tuple;
   RID right_rid;
-  while(right_child_->Next(&right_tuple,&right_rid))  //用右表构造方便左连接
-  {
-    ht_.emplace(MakeRightHashJoinKey(&right_tuple),right_tuple);
+  while (right_child_->Next(&right_tuple, &right_rid)) {  // 用右表方便左连接
+    ht_.emplace(MakeRightHashJoinKey(&right_tuple), right_tuple);
   }
 }
 
 auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
-  if(it_ != end_it_)
-  {
+  if (it_ != end_it_) {
     Tuple right_tuple = it_->second;
     std::vector<Value> values(cur_left_values_);
-    const Schema& right_schema = right_child_->GetOutputSchema();
-    for(uint32_t col_idx=0;col_idx<right_schema.GetColumnCount();++col_idx)
-    {
-      values.emplace_back(right_tuple.GetValue(&right_schema,col_idx));
+    const Schema &right_schema = right_child_->GetOutputSchema();
+    for (uint32_t col_idx = 0; col_idx < right_schema.GetColumnCount(); ++col_idx) {
+      values.emplace_back(right_tuple.GetValue(&right_schema, col_idx));
     }
-    *tuple = Tuple(values,&GetOutputSchema());
+    *tuple = Tuple(values, &GetOutputSchema());
     *rid = tuple->GetRid();
     ++it_;
     return true;
@@ -61,46 +58,37 @@ auto HashJoinExecutor::Next(Tuple *tuple, RID *rid) -> bool {
 
   Tuple left_tuple;
   RID left_rid;
-  const Schema& left_schema = left_child_->GetOutputSchema();
-  const Schema& right_schema = right_child_->GetOutputSchema();
-  while(left_child_->Next(&left_tuple,&left_rid))
-  {
+  const Schema &left_schema = left_child_->GetOutputSchema();
+  const Schema &right_schema = right_child_->GetOutputSchema();
+  while (left_child_->Next(&left_tuple, &left_rid)) {
     auto range = ht_.equal_range(MakeLeftHashJoinKey(&left_tuple));
     it_ = range.first;
     end_it_ = range.second;
-    if(it_ == end_it_)
-    {
-      if(plan_->join_type_ == JoinType::LEFT)
-      {
+    if (it_ == end_it_) {
+      if (plan_->join_type_ == JoinType::LEFT) {
         cur_left_values_.clear();
-        for(uint32_t col_idx=0;col_idx<left_schema.GetColumnCount();++col_idx)
-        {
-          cur_left_values_.emplace_back(left_tuple.GetValue(&left_schema,col_idx));
+        for (uint32_t col_idx = 0; col_idx < left_schema.GetColumnCount(); ++col_idx) {
+          cur_left_values_.emplace_back(left_tuple.GetValue(&left_schema, col_idx));
         }
         std::vector<Value> values(cur_left_values_);
-        for(uint32_t col_idx=0;col_idx<right_schema.GetColumnCount();++col_idx)
-        {
+        for (uint32_t col_idx = 0; col_idx < right_schema.GetColumnCount(); ++col_idx) {
           values.emplace_back(ValueFactory::GetNullValueByType(right_schema.GetColumn(col_idx).GetType()));
         }
-        *tuple = Tuple(values,&GetOutputSchema());
+        *tuple = Tuple(values, &GetOutputSchema());
         *rid = tuple->GetRid();
         return true;
       }
-    }
-    else
-    {
+    } else {
       cur_left_values_.clear();
-      for(uint32_t col_idx=0;col_idx<left_schema.GetColumnCount();++col_idx)
-      {
-        cur_left_values_.emplace_back(left_tuple.GetValue(&left_schema,col_idx));
+      for (uint32_t col_idx = 0; col_idx < left_schema.GetColumnCount(); ++col_idx) {
+        cur_left_values_.emplace_back(left_tuple.GetValue(&left_schema, col_idx));
       }
       Tuple right_tuple = it_->second;
       std::vector<Value> values(cur_left_values_);
-      for(uint32_t col_idx=0;col_idx<right_schema.GetColumnCount();++col_idx)
-      {
-        values.emplace_back(right_tuple.GetValue(&right_schema,col_idx));
+      for (uint32_t col_idx = 0; col_idx < right_schema.GetColumnCount(); ++col_idx) {
+        values.emplace_back(right_tuple.GetValue(&right_schema, col_idx));
       }
-      *tuple = Tuple(values,&GetOutputSchema());
+      *tuple = Tuple(values, &GetOutputSchema());
       *rid = tuple->GetRid();
       ++it_;
       return true;
